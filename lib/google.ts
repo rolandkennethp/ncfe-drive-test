@@ -4,7 +4,11 @@ import { refreshAccessToken } from "@/auth";
 
 /** Returns the signed-in user's Google access token, refreshing it if expired. */
 export async function getGoogleAccessToken(req: Request): Promise<string | null> {
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+    const token = await getToken({
+    req,
+    secret: process.env.AUTH_SECRET,
+    secureCookie: new URL(req.url).protocol === "https:", // Vercel uses https cookies
+  });
   if (!token?.accessToken) return null;
   if (token.expiresAt && Date.now() < token.expiresAt * 1000 - 60_000) return token.accessToken;
   const fresh = await refreshAccessToken(token);
