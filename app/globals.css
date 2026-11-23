@@ -9,6 +9,11 @@
   --color-line: #e6e8ef;
 }
 
+/* Smaller base size: every Tailwind size (text and spacing) scales from this. */
+html {
+  font-size: 14px;
+}
+
 body {
   background: var(--color-page);
   color: #1f2937;

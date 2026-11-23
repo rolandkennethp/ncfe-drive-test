@@ -30,12 +30,13 @@ export default async function DocPage({
         eyebrow={isSheet ? "GOOGLE SHEET" : "GOOGLE DOC"}
         title={name}
         right={
-          <Link href="/" className="flex shrink-0 items-center gap-2 rounded-xl border border-line px-4 py-2.5 text-sm hover:bg-gray-50">
-            <ArrowLeft size={16} /> Back to Resources
+          <Link href="/" aria-label="Back to Resources"
+            className="flex shrink-0 items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-xs hover:bg-gray-50">
+            <ArrowLeft size={14} /> <span className="hidden sm:inline">Back to Resources</span>
           </Link>
         }
       />
-      <EditorFrame src={url} openUrl={url} label={label} />
+      <EditorFrame src={url} openUrl={url} label={label} name={name} />
     </>
   );
 }

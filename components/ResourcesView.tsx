@@ -59,43 +59,47 @@ export default function ResourcesView() {
     return null;
   }
 
+  const docHref = (f: DriveFile) => `/doc/${f.id}?kind=${f.kind}&name=${encodeURIComponent(f.name)}`;
+  const showList = status === "ready" || (status === "loading" && files.length > 0);
+  const emptyText = query ? <>No documents match “{query}”.</> : "No Google Docs or Sheets in this folder yet.";
+
   return (
-    <div className="px-12 py-9">
+    <div className="px-4 py-4 md:px-8 md:py-6">
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-4">
-        <label className="flex w-full max-w-[480px] items-center gap-3 rounded-xl border border-line bg-white px-4 py-3.5">
-          <Search size={18} className="text-gray-500" />
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+        <label className="flex w-full items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 sm:max-w-sm">
+          <Search size={15} className="text-gray-500" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search resources"
-            className="w-full bg-transparent outline-none placeholder:text-gray-400"
+            className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
           />
         </label>
 
-        <div className="relative flex items-center gap-3">
-          <button onClick={load} title="Refresh list"
-            className="grid h-[52px] w-[52px] place-items-center rounded-xl border border-line bg-white text-gray-600 hover:bg-gray-50">
-            <RefreshCw size={18} className={status === "loading" ? "animate-spin" : ""} />
+        <div className="relative flex items-center gap-2">
+          <button onClick={load} title="Refresh list" aria-label="Refresh list"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-line bg-white text-gray-600 hover:bg-gray-50">
+            <RefreshCw size={15} className={status === "loading" ? "animate-spin" : ""} />
           </button>
           <button
             onClick={() => setMenuOpen((o) => !o)}
-            className="flex items-center gap-2 rounded-xl bg-brand px-6 py-3.5 font-semibold text-white shadow-md hover:bg-brand-dark"
+            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand px-4 text-sm font-semibold text-white shadow-sm hover:bg-brand-dark sm:flex-none"
           >
-            <Plus size={18} /> New document <ChevronDown size={16} />
+            <Plus size={15} /> New document <ChevronDown size={14} />
           </button>
           {menuOpen && (
-            <div className="absolute right-0 top-full z-10 mt-2 w-56 overflow-hidden rounded-xl border border-line bg-white shadow-lg">
-              <MenuItem icon={<FileText size={18} className="text-blue-600" />} label="New Google Doc"
+            <div className="absolute right-0 top-full z-10 mt-1.5 w-48 overflow-hidden rounded-lg border border-line bg-white shadow-lg">
+              <MenuItem icon={<FileText size={15} className="text-blue-600" />} label="New Google Doc"
                 onClick={() => { setCreating("doc"); setMenuOpen(false); }} />
-              <MenuItem icon={<FileSpreadsheet size={18} className="text-green-600" />} label="New Google Sheet"
+              <MenuItem icon={<FileSpreadsheet size={15} className="text-green-600" />} label="New Google Sheet"
                 onClick={() => { setCreating("sheet"); setMenuOpen(false); }} />
             </div>
           )}
         </div>
       </div>
 
-      <p className="mt-8 text-gray-600">
+      <p className="mt-5 text-xs text-gray-600 md:text-sm">
         {status === "ready"
           ? <>Google Docs and Sheets in the shared folder <span className="font-semibold text-gray-800">“{folderName}”</span> · {files.length} file(s)</>
           : "Google Docs and Sheets in the shared NCFE Google Drive folder."}
@@ -112,72 +116,72 @@ export default function ResourcesView() {
       )}
 
       {status === "not_connected" && (
-        <Notice>Connect Google Drive (bottom-left) to see the files in the shared folder.</Notice>
+        <Notice>Connect Google Drive (in the menu) to see the files in the shared folder.</Notice>
       )}
       {status === "error" && (
         <Notice tone="error">{error} <button onClick={load} className="ml-2 font-semibold underline">Try again</button></Notice>
       )}
 
-      {/* Table */}
-      {(status === "ready" || (status === "loading" && files.length > 0)) && (
-      <div className="mt-5 overflow-hidden rounded-2xl border border-line bg-white">
-        <table className="w-full text-left">
-          <thead className="border-b border-line text-sm font-semibold tracking-wide text-gray-600">
+      {/* Mobile: cards */}
+      {showList && (
+        <div className="mt-3 space-y-2 md:hidden">
+          {visible.map((f) => (
+            <div key={f.id} className={`rounded-xl border border-line p-3 ${created?.file.id === f.id ? "bg-green-50" : "bg-white"}`}>
+              <Link href={docHref(f)} className="flex items-start gap-2 text-sm font-semibold text-gray-900">
+                <FileIcon kind={f.kind} />
+                <span className="min-w-0 break-words">{f.name}</span>
+              </Link>
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-gray-500">
+                <TypeBadge kind={f.kind} />
+                <span>Edited {formatDate(f.modifiedTime)}</span>
+                <span className="truncate">by {f.modifiedBy}</span>
+              </div>
+              <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                <Actions f={f} href={docHref(f)} />
+              </div>
+            </div>
+          ))}
+          {visible.length === 0 && (
+            <p className="rounded-xl border border-line bg-white p-6 text-center text-xs text-gray-500">{emptyText}</p>
+          )}
+        </div>
+      )}
+
+      {/* Desktop: table */}
+      {showList && (
+      <div className="mt-3 hidden overflow-x-auto rounded-xl border border-line bg-white md:block">
+        <table className="w-full text-left text-sm">
+          <thead className="border-b border-line text-[11px] font-semibold tracking-wide text-gray-600">
             <tr>
-              <th className="px-6 py-4">NAME</th>
-              <th className="px-4 py-4">TYPE</th>
-              <th className="px-4 py-4">CREATED BY</th>
-              <th className="px-4 py-4">LAST EDITED</th>
-              <th className="px-4 py-4">ACTIONS</th>
+              <th className="px-4 py-3">NAME</th>
+              <th className="px-3 py-3">TYPE</th>
+              <th className="px-3 py-3">CREATED BY</th>
+              <th className="px-3 py-3">LAST EDITED</th>
+              <th className="px-3 py-3">ACTIONS</th>
             </tr>
           </thead>
           <tbody>
             {visible.map((f) => (
               <tr key={f.id} className={`border-b border-line last:border-0 ${created?.file.id === f.id ? "bg-green-50" : ""}`}>
-                <td className="px-6 py-4">
-                  <Link href={`/doc/${f.id}?kind=${f.kind}&name=${encodeURIComponent(f.name)}`}
-                    className="flex items-center gap-3 font-semibold text-gray-900 hover:text-brand">
-                    {f.kind === "doc" ? <FileText size={18} className="shrink-0 text-blue-600" />
-                      : <FileSpreadsheet size={18} className="shrink-0 text-green-600" />}
+                <td className="px-4 py-3">
+                  <Link href={docHref(f)} className="flex items-center gap-2 font-semibold text-gray-900 hover:text-brand">
+                    <FileIcon kind={f.kind} />
                     {f.name}
                   </Link>
                 </td>
-                <td className="px-4 py-4">
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${f.kind === "doc" ? "bg-blue-50 text-blue-700" : "bg-green-50 text-green-700"}`}>
-                    {f.kind === "doc" ? "Doc" : "Sheet"}
-                  </span>
-                </td>
-                <td className="px-4 py-4 text-gray-700">{f.createdBy}</td>
-                <td className="px-4 py-4 text-gray-700">
+                <td className="px-3 py-3"><TypeBadge kind={f.kind} /></td>
+                <td className="px-3 py-3 text-xs text-gray-700">{f.createdBy}</td>
+                <td className="px-3 py-3 text-xs text-gray-700">
                   {formatDate(f.modifiedTime)}
-                  <span className="block text-sm text-gray-500">by {f.modifiedBy}</span>
+                  <span className="block text-[11px] text-gray-500">by {f.modifiedBy}</span>
                 </td>
-                <td className="px-4 py-4">
-                  <div className="flex gap-2">
-                    <Link href={`/doc/${f.id}?kind=${f.kind}&name=${encodeURIComponent(f.name)}`}
-                      className="rounded-lg bg-gray-100 px-3 py-1.5 text-sm hover:bg-gray-200">Open</Link>
-                    {f.webViewLink ? (
-                      <a href={f.webViewLink} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm hover:bg-gray-200">
-                        Open in Google <ExternalLink size={14} />
-                      </a>
-                    ) : (
-                      <span title="No Google link available"
-                        className="flex cursor-not-allowed items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm text-gray-400">
-                        Open in Google <ExternalLink size={14} />
-                      </span>
-                    )}
-                    {f.canEdit === false && (
-                      <span className="self-center text-xs text-gray-500">View only</span>
-                    )}
-                  </div>
+                <td className="px-3 py-3">
+                  <div className="flex items-center gap-1.5"><Actions f={f} href={docHref(f)} /></div>
                 </td>
               </tr>
             ))}
             {visible.length === 0 && (
-              <tr><td colSpan={5} className="px-6 py-10 text-center text-gray-500">
-                {query ? <>No documents match “{query}”.</> : "No Google Docs or Sheets in this folder yet."}
-              </td></tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-xs text-gray-500">{emptyText}</td></tr>
             )}
           </tbody>
         </table>
@@ -185,13 +189,46 @@ export default function ResourcesView() {
       )}
 
       {status === "loading" && files.length === 0 && (
-        <div className="mt-10 flex items-center justify-center gap-2 text-gray-500">
-          <Loader2 size={18} className="animate-spin" /> Loading files from Google Drive…
+        <div className="mt-8 flex items-center justify-center gap-2 text-xs text-gray-500">
+          <Loader2 size={15} className="animate-spin" /> Loading files from Google Drive…
         </div>
       )}
 
       {creating && <NameDialog kind={creating} onCancel={() => setCreating(null)} onCreate={handleCreate} />}
     </div>
+  );
+}
+
+function FileIcon({ kind }: { kind: Kind }) {
+  return kind === "doc"
+    ? <FileText size={15} className="mt-0.5 shrink-0 text-blue-600 md:mt-0" />
+    : <FileSpreadsheet size={15} className="mt-0.5 shrink-0 text-green-600 md:mt-0" />;
+}
+
+function TypeBadge({ kind }: { kind: Kind }) {
+  return (
+    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${kind === "doc" ? "bg-blue-50 text-blue-700" : "bg-green-50 text-green-700"}`}>
+      {kind === "doc" ? "Doc" : "Sheet"}
+    </span>
+  );
+}
+
+function Actions({ f, href }: { f: DriveFile; href: string }) {
+  const btn = "flex items-center gap-1 rounded-md bg-gray-100 px-2.5 py-1 text-xs";
+  return (
+    <>
+      <Link href={href} className={`${btn} hover:bg-gray-200`}>Open</Link>
+      {f.webViewLink ? (
+        <a href={f.webViewLink} target="_blank" rel="noopener noreferrer" className={`${btn} hover:bg-gray-200`}>
+          Open in Google <ExternalLink size={11} />
+        </a>
+      ) : (
+        <span title="No Google link available" className={`${btn} cursor-not-allowed text-gray-400`}>
+          Open in Google <ExternalLink size={11} />
+        </span>
+      )}
+      {f.canEdit === false && <span className="text-[11px] text-gray-500">View only</span>}
+    </>
   );
 }
 
@@ -208,9 +245,9 @@ function Notice({ children, tone = "info" }: { children: React.ReactNode; tone?:
     success: "border-green-200 bg-green-50 text-green-800",
   }[tone];
   return (
-    <div className={`mt-5 flex items-start gap-2 rounded-xl border p-4 text-sm ${styles}`}>
-      {tone === "error" && <AlertTriangle size={16} className="mt-0.5 shrink-0" />}
-      {tone === "success" && <CheckCircle2 size={16} className="mt-0.5 shrink-0" />}
+    <div className={`mt-3 flex items-start gap-2 rounded-lg border p-3 text-xs ${styles}`}>
+      {tone === "error" && <AlertTriangle size={13} className="mt-0.5 shrink-0" />}
+      {tone === "success" && <CheckCircle2 size={13} className="mt-0.5 shrink-0" />}
       <div>{children}</div>
     </div>
   );
@@ -218,7 +255,7 @@ function Notice({ children, tone = "info" }: { children: React.ReactNode; tone?:
 
 function MenuItem({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
   return (
-    <button onClick={onClick} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50">
+    <button onClick={onClick} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-gray-50">
       {icon} {label}
     </button>
   );
@@ -240,23 +277,23 @@ function NameDialog({ kind, onCancel, onCreate }: { kind: Kind; onCancel: () => 
   }
 
   return (
-    <div className="fixed inset-0 z-20 grid place-items-center bg-black/30">
-      <form onSubmit={submit} className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 px-4">
+      <form onSubmit={submit} className="w-full max-w-sm rounded-xl bg-white p-4 shadow-xl md:p-5">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">New {label}</h2>
-          <button type="button" onClick={onCancel} disabled={busy} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+          <h2 className="text-base font-semibold">New {label}</h2>
+          <button type="button" onClick={onCancel} disabled={busy} className="text-gray-400 hover:text-gray-600"><X size={17} /></button>
         </div>
-        <p className="mt-1 text-sm text-gray-500">It will be created in the shared Google Drive folder.</p>
-        <label className="mt-5 block text-sm font-medium text-gray-700">Document name</label>
+        <p className="mt-1 text-xs text-gray-500">It will be created in the shared Google Drive folder.</p>
+        <label className="mt-4 block text-xs font-medium text-gray-700">Document name</label>
         <input autoFocus value={name} onChange={(e) => setName(e.target.value)} disabled={busy} maxLength={200}
           placeholder={kind === "doc" ? "e.g. Lesson Plan, Science Grade 3" : "e.g. Marks Tracker, Grade 3"}
-          className="mt-2 w-full rounded-xl border border-line px-4 py-3 outline-none focus:border-brand" />
-        {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
-        <div className="mt-6 flex justify-end gap-3">
-          <button type="button" onClick={onCancel} disabled={busy} className="rounded-xl border border-line px-5 py-2.5">Cancel</button>
+          className="mt-1.5 w-full rounded-lg border border-line px-3 py-2 text-sm outline-none focus:border-brand" />
+        {error && <p className="mt-2 text-xs text-red-700">{error}</p>}
+        <div className="mt-5 flex justify-end gap-2">
+          <button type="button" onClick={onCancel} disabled={busy} className="rounded-lg border border-line px-4 py-2 text-sm">Cancel</button>
           <button type="submit" disabled={!name.trim() || busy}
-            className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 font-semibold text-white disabled:opacity-50">
-            {busy && <Loader2 size={16} className="animate-spin" />} {busy ? "Creating…" : "Create"}
+            className="flex items-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+            {busy && <Loader2 size={14} className="animate-spin" />} {busy ? "Creating…" : "Create"}
           </button>
         </div>
       </form>

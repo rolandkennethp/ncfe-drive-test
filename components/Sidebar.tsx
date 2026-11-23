@@ -4,36 +4,29 @@ import GoogleAccount from "@/components/GoogleAccount";
 
 export default function Sidebar() {
   return (
-    <aside className="flex w-[300px] shrink-0 flex-col border-r border-line bg-white px-6 py-7">
+    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-line bg-white px-4 py-5 md:w-60">
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-3 px-2">
-        <span className="grid h-12 w-12 place-items-center rounded-xl bg-navy text-white shadow-md">
-          <GraduationCap size={24} />
+      <Link href="/" className="flex items-center gap-2.5 px-2">
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-navy text-white shadow-md">
+          <GraduationCap size={18} />
         </span>
         <span>
-          <span className="block text-xl font-bold leading-none text-navy">NCFE</span>
-          <span className="mt-1 block text-[10px] font-semibold tracking-[0.18em] text-navy">
-            CURRICULUM HUB
-          </span>
+          <span className="block text-base font-bold leading-none text-navy">NCFE</span>
+          <span className="mt-1 block text-[9px] font-semibold tracking-[0.18em] text-navy">CURRICULUM HUB</span>
         </span>
       </Link>
 
-      <p className="mt-12 px-3 text-[11px] font-medium tracking-[0.18em] text-gray-500">
-        ADMIN WORKSPACE
-      </p>
+      <p className="mt-8 px-2 text-[10px] font-medium tracking-[0.18em] text-gray-500">ADMIN WORKSPACE</p>
 
-      <nav className="mt-4">
-        <Link
-          href="/"
-          className="flex items-center gap-3 rounded-lg bg-[#eef2fd] px-4 py-3 font-medium text-brand"
-        >
-          <FolderOpen size={20} />
+      <nav className="mt-3">
+        <Link href="/" className="flex items-center gap-2.5 rounded-lg bg-[#eef2fd] px-3 py-2 text-sm font-medium text-brand">
+          <FolderOpen size={16} />
           Resources
         </Link>
       </nav>
 
       {/* Google account connection */}
-      <div className="mt-auto border-t border-line pt-5">
+      <div className="mt-auto border-t border-line pt-4">
         <GoogleAccount />
       </div>
     </aside>

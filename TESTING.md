@@ -38,6 +38,7 @@
 - **Account mismatch** — app connected with Account A while Chrome is signed into Google with Account B only.
 - **Edits made directly in Google Drive** appearing after **Reload editor** (expected to work — same file).
 - More than 200 files in the folder; files inside sub-folders.
+- **Mobile card on a real phone** — tap **Open in Google Docs/Sheets** and confirm the correct file opens (in the Google app or browser) and edits save to the shared folder.
 
 ## 4. Limitations imposed by Google or the browser
 
@@ -49,12 +50,17 @@
 6. **File ownership:** in a shared folder in someone's *My Drive*, each new file is owned by the account that created it.
 7. **Google API rate limits** apply; the app shows a message but does not retry automatically.
 
+8. **Google features that open their own pop-up frames are blocked inside the embedded editor** (found 23 Nov 2026). Chrome's console shows `Framing 'https://accounts.google.com/' / 'https://contacts.google.com/' / 'https://docs.google.com/' violates … "frame-ancestors https://docs.google.com"`. Google only allows these inner frames when Google Docs is the top page. Likely affected inside the website: the **Share** dialog, **switching Google account** (profile photo menu), **@mentions / contact suggestions** in comments, and some sign-in prompts. Typing, formatting, tables, formulas and autosave are not affected. Workaround: **Open in Google**.
+9. **On phones, Google serves a read-only view inside an iframe** (found 23 Nov 2026). In a phone-sized browser, Sheets loads as `…/htmlview/sheet?…` (read-only HTML view) instead of the editor. **Change made:** on screens narrower than 768px the app no longer loads the iframe; it shows a card with the file name and an **Open in Google Docs/Sheets** button that opens the same file (`docs.google.com/{document|spreadsheets}/d/<id>/edit`). The desktop iframe is unchanged.
+10. **Harmless console messages from Google's own pages** — not errors in the app, no action needed: `The key "target-densitydpi" is not supported`, `DOCS_timing is not defined`, and `feedback-pa.clients6.google.com … 429` (Google's feedback survey being refused).
+
 ## 5. Recommendations for the real Curriculum Hub
 
 - **Make the Google Cloud app "Internal"** (NCFE Workspace accounts only). This removes the unverified-app warning, the 7-day expiry and the verification requirement. Personal Gmail accounts would then not be able to sign in.
 - **Use a Shared Drive** instead of a shared My Drive folder, so NCFE (not individual staff) owns all files.
 - Standardise on **Google Chrome** for admins and teachers using the in-page editor.
-- Keep the **Open in Google** fallback visible at all times.
+- Keep the **Open in Google** fallback visible at all times, and use it for sharing, comments with @mentions and account switching.
+- Treat phones as **open-in-Google only**; in-page editing is a desktop feature.
 
 ---
 
