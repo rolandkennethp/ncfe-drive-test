@@ -20,7 +20,7 @@ See **TESTING.md** for the test results, limitations and the two-account checkli
 ## 2. Google Cloud setup (one time)
 
 1. Go to <https://console.cloud.google.com> → create a project (e.g. "NCFE Drive Test").
-2. **APIs & Services → Library** → enable **Google Drive API** (the only API needed).
+2. **APIs & Services → Library** → enable **Google Drive API**, **Google Docs API** and **Google Sheets API** (the last two are used by the Document Compliance Checker).
 3. **OAuth consent screen / Google Auth Platform**
    - Audience: **External**, status **Testing**
    - **Test users**: add both Google accounts
@@ -75,3 +75,40 @@ The first time, Google shows "Google hasn't verified this app" → **Advanced �
 
 **Google permission (scope) used:** `openid email profile https://www.googleapis.com/auth/drive`.
 The full `drive` scope is needed so one account can see files created by another account. The narrower `drive.file` scope only shows files this app created for *that* user.
+
+---
+
+## 6. Document Compliance Checker
+
+On any open Doc or Sheet, **Check document** reads the **latest saved version** through the Google Docs / Sheets API and checks it against a rule set. Results appear in a popup (the Google editor stays open behind it).
+
+- Every rule returns only **Pass** or **Warning**. Warnings never block the admin.
+- The current rules are **SAMPLE rules – not official NCFE guidelines**.
+- Some warnings have a **quick fix** (e.g. change font, make header bold). A fix changes the real file **only after the admin clicks it and confirms**. Undo with **File → Version history** in Google.
+- The checker only works for files **inside the shared folder** that the signed-in account can **edit**.
+- No new OAuth scope is needed: the existing `drive` scope covers the Docs and Sheets APIs.
+
+### Files
+
+| File | Purpose |
+|---|---|
+| `components/ComplianceCheck.tsx` | Check document button, results popup, Fix / Fix all with confirmation |
+| `components/EditorFrame.tsx` | Places the button in the editor toolbar (desktop) and on the mobile card |
+| `app/api/check/[id]/route.ts` | `GET` – runs the check (read-only) |
+| `app/api/check/[id]/fix/route.ts` | `POST { ruleId, input? }` – applies ONE confirmed quick fix |
+| `lib/compliance/server.ts` | Security checks (signed in, file type, in shared folder, edit access), reads the file, chooses the rule sets |
+| `lib/compliance/engine.ts` | Runs any rule set; knows nothing about specific rules |
+| `lib/compliance/types.ts` | Rule, rule set, result and fix types |
+| `lib/compliance/docModel.ts` / `sheetModel.ts` | Turn Google API data into simple models (headings, sections, real fonts / tabs, cells, formatting) |
+| `lib/compliance/rules/docRules.ts` / `sheetRules.ts` | Reusable rule templates (with optional quick fixes). They take settings, no hard-coded values |
+| `lib/compliance/ruleSets/sample-doc.ts` / `sample-sheet.ts` | The SAMPLE settings |
+
+### Adding or changing rules (e.g. official Lesson Plan guidelines)
+
+1. Copy `lib/compliance/ruleSets/sample-doc.ts` to e.g. `lesson-plan.ts`.
+2. Change the settings (headings, font, size, title prefixes…) and set `sample: false`.
+3. In `lib/compliance/server.ts`, point `DOC_RULES` (or `SHEET_RULES`) at the new rule set.
+4. A completely new kind of check = a new template function in `rules/docRules.ts` or `rules/sheetRules.ts`. The engine does not change.
+
+Choosing between several rule sets (ACP / Lesson Plan / Self Practice) per document is not built yet.
+

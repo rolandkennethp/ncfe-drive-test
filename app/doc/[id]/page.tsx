@@ -36,7 +36,7 @@ export default async function DocPage({
           </Link>
         }
       />
-      <EditorFrame src={url} openUrl={url} label={label} name={name} />
+      <EditorFrame src={url} openUrl={url} label={label} name={name} fileId={id} />
     </>
   );
 }

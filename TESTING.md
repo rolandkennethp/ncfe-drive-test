@@ -54,7 +54,40 @@
 9. **On phones, Google serves a read-only view inside an iframe** (found 23 Nov 2026). In a phone-sized browser, Sheets loads as `…/htmlview/sheet?…` (read-only HTML view) instead of the editor. **Change made:** on screens narrower than 768px the app no longer loads the iframe; it shows a card with the file name and an **Open in Google Docs/Sheets** button that opens the same file (`docs.google.com/{document|spreadsheets}/d/<id>/edit`). The desktop iframe is unchanged.
 10. **Harmless console messages from Google's own pages** — not errors in the app, no action needed: `The key "target-densitydpi" is not supported`, `DOCS_timing is not defined`, and `feedback-pa.clients6.google.com … 429` (Google's feedback survey being refused).
 
-## 5. Recommendations for the real Curriculum Hub
+## 5. Document Compliance Checker (tested 24 Nov 2026, localhost, both accounts)
+
+| Test | Result |
+|---|---|
+| Docs API + Sheets API enabled; no new OAuth scope needed | ✅ |
+| Check route reads latest saved Doc and Sheet | ✅ |
+| Security: signed out → "Connect Google Drive"; file outside shared folder → refused; **view-only account → "You need edit access"** | ✅ |
+| Doc model: headings, sections, real fonts/sizes (incl. inherited), tables listed as not checked | ✅ |
+| Sheet model: tabs, header row, bold, empty cells, limits note | ✅ |
+| 5 sample Doc rules: pass and warning cases | ✅ |
+| 4 sample Sheet rules: pass and warning cases; "first tab checked instead" note | ✅ |
+| Only Pass / Warning returned; warnings never block | ✅ |
+| Popup: summary, warnings, collapsible passed rules, checked time, sample label, Run again, Close, Escape, editor kept behind | ✅ |
+| Mobile: button on card, popup usable | ✅ |
+| Quick fixes (Doc): font, size, headings, rename file, Fix all, Cancel changes nothing | ✅ |
+| Quick fixes (Sheet): rename tab, add headings, make bold, Fix all | ✅ |
+| Fixes visible in File → Version history and restorable | ✅ |
+| Second account can check and fix | ✅ |
+| Expired session, repeated checks (Run again ×5) | ✅ |
+| A check on its own never changes the file ("Last edit" unchanged) | ✅ |
+| Deployed version on Vercel | ⏳ after push |
+
+**Decision change:** the original decision was "report only, never modify documents". At Punith's request, **user-confirmed quick fixes** were added. Nothing is ever changed automatically; every fix needs a click + confirmation, and the check itself stays read-only.
+
+**Checker limitations**
+- Checks the **last saved** version — changes typed in the last 1–2 seconds may be missed (wait for "Saved to Drive").
+- Docs: **tables, images, tables of contents** are not checked; lists are checked only as text.
+- Sheets: only the **first 10 tabs, columns A–Z, rows 1–200** are read; formulas are checked by their displayed value.
+- Missing headings that don't exist anywhere are added at the **end** of the document by the quick fix; the admin must move them.
+- Quick fixes are undone only via **File → Version history** (Cmd + Z in the editor does not undo them).
+- Docs fixes are applied only to the exact version just read (safe against simultaneous typing). Google Sheets has no such check, so a Sheet fix could rarely overlap with someone typing at the same moment.
+- Rules are **SAMPLE rules – not official NCFE guidelines**. One rule set per file type; choosing ACP / Lesson Plan / Self Practice is not built yet.
+
+## 6. Recommendations for the real Curriculum Hub
 
 - **Make the Google Cloud app "Internal"** (NCFE Workspace accounts only). This removes the unverified-app warning, the 7-day expiry and the verification requirement. Personal Gmail accounts would then not be able to sign in.
 - **Use a Shared Drive** instead of a shared My Drive folder, so NCFE (not individual staff) owns all files.
@@ -92,3 +125,11 @@ Use two Chrome profiles: **Profile 1 = Account 1**, **Profile 2 = Account 2**. E
 - [ ] New Google Sheet → "Test Sheet A"
 - [ ] Enter `10` (A1), `20` (A2), `=SUM(A1:A2)` (A3) → shows 30
 - [ ] Repeat Tests B and C for the Sheet
+
+### Document Compliance Checker
+- [ ] Open a Doc → **Check document** → popup shows summary and "Sample rules" label
+- [ ] Break a rule → wait for "Saved to Drive" → **Run again** → warning appears
+- [ ] Apply a quick fix → confirm → re-check passes; change visible in the editor
+- [ ] Repeat with a Sheet
+- [ ] View-only account → "You need edit access"
+

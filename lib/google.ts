@@ -37,3 +37,21 @@ export async function explainError(res: Response, what: string) {
   if (res.status === 403) return { status: 403, error: `This Google account doesn't have permission for the ${what}.` };
   return { status: res.status, error: body?.error?.message ?? `Google returned an error (${res.status}).` };
 }
+
+/** Calls the Google Docs API as the signed-in user. Writes are used only by user-confirmed quick fixes. */
+export async function docs(path: string, accessToken: string, init: RequestInit = {}) {
+  return fetch(`https://docs.googleapis.com/v1/${path}`, {
+    ...init,
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json", ...init.headers },
+    cache: "no-store",
+  });
+}
+
+/** Calls the Google Sheets API as the signed-in user. Writes are used only by user-confirmed quick fixes. */
+export async function sheets(path: string, accessToken: string, init: RequestInit = {}) {
+  return fetch(`https://sheets.googleapis.com/v4/${path}`, {
+    ...init,
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json", ...init.headers },
+    cache: "no-store",
+  });
+}

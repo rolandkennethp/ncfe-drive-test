@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { ExternalLink, FileSpreadsheet, FileText, Loader2, RotateCw } from "lucide-react";
+import ComplianceCheck from "@/components/ComplianceCheck";
 
 // Phone-sized screens (below Tailwind's "md" breakpoint).
 const MOBILE_QUERY = "(max-width: 767px)";
@@ -17,19 +18,19 @@ function useIsMobile(): boolean | null {
   return useSyncExternalStore(subscribe, () => window.matchMedia(MOBILE_QUERY).matches, () => null);
 }
 
-type Props = { src: string; openUrl: string; label: string; name: string };
+type Props = { src: string; openUrl: string; label: string; name: string; fileId: string };
 
 // Desktop: the real Google editor in an iframe.
 // Mobile: Google only serves a read-only view inside an iframe, so we skip the iframe
 // and show a card that opens the file in Google Docs/Sheets instead.
-export default function EditorFrame({ src, openUrl, label, name }: Props) {
+export default function EditorFrame({ src, openUrl, label, name, fileId }: Props) {
   const isMobile = useIsMobile();
   if (isMobile === null) return <div className="flex-1" />; // decide on the client before loading anything
-  if (isMobile) return <MobileOpenCard openUrl={openUrl} label={label} name={name} />;
-  return <DesktopEditor src={src} openUrl={openUrl} label={label} />;
+  if (isMobile) return <MobileOpenCard openUrl={openUrl} label={label} name={name} fileId={fileId} />;
+  return <DesktopEditor src={src} openUrl={openUrl} label={label} name={name} fileId={fileId} />;
 }
 
-function MobileOpenCard({ openUrl, label, name }: { openUrl: string; label: string; name: string }) {
+function MobileOpenCard({ openUrl, label, name, fileId }: { openUrl: string; label: string; name: string; fileId: string }) {
   const isSheet = label === "Google Sheets";
   return (
     <div className="flex flex-1 items-start justify-center p-4">
@@ -43,6 +44,7 @@ function MobileOpenCard({ openUrl, label, name }: { openUrl: string; label: stri
           className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark">
           Open in {label} <ExternalLink size={14} />
         </a>
+        <ComplianceCheck fileId={fileId} name={name} fullWidth />
         <p className="mt-3 text-[11px] leading-relaxed text-gray-500">
           On phones, Google only allows a read-only view inside other websites, so the file opens in {label}.
           Changes save to the shared Google Drive folder.
@@ -55,7 +57,7 @@ function MobileOpenCard({ openUrl, label, name }: { openUrl: string; label: stri
 // Shows the REAL Google Docs/Sheets editor in an iframe.
 // Note: the page cannot see inside a Google iframe (browser security), so we can only
 // detect "never finished loading". If Google shows an error page inside it, use the fallback button.
-function DesktopEditor({ src, openUrl, label }: { src: string; openUrl: string; label: string }) {
+function DesktopEditor({ src, openUrl, label, name, fileId }: { src: string; openUrl: string; label: string; name: string; fileId: string }) {
   const [key, setKey] = useState(0);        // changing this reloads the iframe
   const [loaded, setLoaded] = useState(false);
   const [slow, setSlow] = useState(false);
@@ -79,6 +81,7 @@ function DesktopEditor({ src, openUrl, label }: { src: string; openUrl: string; 
           Editing in the real Google editor. Changes save to Google Drive automatically.
         </p>
         <div className="flex w-full shrink-0 justify-end gap-1.5 md:w-auto">
+          <ComplianceCheck fileId={fileId} name={name} />
           <button onClick={reload} className="flex items-center gap-1 rounded-md border border-line bg-white px-2.5 py-1.5 hover:bg-gray-50">
             <RotateCw size={12} /> Reload
           </button>
